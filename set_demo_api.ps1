@@ -6,7 +6,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$projectRoot = 'E:\Desktop_Migrated_20260608\GreaterWMS-master'
+$projectRoot = 'E:\Desktop_Migrated_20260608\WMS-Demo'
 $baseUrlFiles = @(
   (Join-Path $projectRoot 'templates\public\statics\baseurl.txt'),
   (Join-Path $projectRoot 'templates\dist\spa\statics\baseurl.txt')
