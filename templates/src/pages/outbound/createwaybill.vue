@@ -5,9 +5,6 @@
         <div class="topbar-left">
           <span class="topbar-label">运单号:</span>
           <span class="topbar-code">{{ form.waybillNo }}</span>
-          <q-checkbox v-model="form.transitWaybill" dense label="往返运单" />
-          <q-checkbox v-model="form.returnAllocation" dense label="返程配货" />
-          <q-checkbox v-model="form.emptyTask" dense label="空驶任务" />
         </div>
         <div class="topbar-title">创建运单</div>
         <div class="topbar-right">
@@ -234,9 +231,6 @@ const waybillNo = () => `XALHBJCYD${new Date().toISOString().slice(0, 10).replac
 const buildInitialForm = () => ({
   waybillNo: waybillNo(),
   orderTime: nowString(),
-  transitWaybill: false,
-  returnAllocation: false,
-  emptyTask: false,
   organization: '西安莲湖白金昌',
   lineName: '',
   projectName: '',
