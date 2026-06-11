@@ -99,16 +99,6 @@
         <template v-if="authin === '0'">
           <transition appear enter-active-class="animated zoomIn">
             <q-btn
-              label="演示进入"
-              color="amber-4"
-              text-color="dark"
-              class="demo-access-btn"
-              @click="quickDemoAccess()"
-              style="margin-left: 10px"
-            />
-          </transition>
-          <transition appear enter-active-class="animated zoomIn">
-            <q-btn
               :label="$t('index.login')"
               flat
               color="white"
@@ -292,17 +282,6 @@
           <div class="auth-dialog-intro">
             使用手机号和验证码登录平台，适合国内物流后台的常见使用方式。
           </div>
-          <div class="demo-helper-card">
-            <div class="demo-helper-title">快速演示</div>
-            <div class="demo-helper-desc">不想手动注册时，可直接使用一键演示入口自动生成账号和演示数据。</div>
-          </div>
-          <q-btn
-            unelevated
-            color="deep-orange"
-            class="full-width q-mb-md"
-            label="演示模式一键进入"
-            @click="quickDemoAccess()"
-          />
           <q-input
             dense
             outlined
@@ -765,10 +744,6 @@ export default {
         code: '',
         debugCode: ''
       },
-      demoAccount: {
-        name: '演示企业',
-        phone: '13800000000'
-      },
       loginCodeCountdown: 0,
       registerCodeCountdown: 0,
       loginCodeTimer: null,
@@ -983,45 +958,6 @@ export default {
           this.showNotify(err.detail || '注册失败')
         })
     },
-    async quickDemoAccess () {
-      const phone = this.demoAccount.phone
-      const name = this.demoAccount.name
-      SessionStorage.set('axios_check', 'false')
-      this.showNotify('正在准备演示账号，请稍候…', 'primary', 'hourglass_top')
-      try {
-        const registerCodeRes = await post('login/send_code/', { phone, scene: 'register' })
-        if (registerCodeRes.code === '200' && registerCodeRes.data && registerCodeRes.data.debug_code) {
-          const registerRes = await post('register/', {
-            name,
-            phone,
-            code: registerCodeRes.data.debug_code
-          })
-          if (registerRes.code === '200') {
-            this.applyPhoneAuth(registerRes.data, 'demo')
-            return
-          }
-        }
-      } catch (err) {}
-
-      try {
-        const loginCodeRes = await post('login/send_code/', { phone, scene: 'login' })
-        if (loginCodeRes.code !== '200' || !loginCodeRes.data || !loginCodeRes.data.debug_code) {
-          this.showNotify(loginCodeRes.msg || '演示账号登录失败')
-          return
-        }
-        const loginRes = await post('login/', {
-          phone,
-          code: loginCodeRes.data.debug_code
-        })
-        if (loginRes.code === '200') {
-          this.applyPhoneAuth(loginRes.data, 'demo')
-        } else {
-          this.showNotify(loginRes.msg || '演示账号登录失败')
-        }
-      } catch (err) {
-        this.showNotify(err.detail || '演示账号登录失败')
-      }
-    },
     staffType () {
       getauth('staff/?staff_name=' + this.login_name).then((res) => {
         if (res.results && res.results.length > 0) {
@@ -1117,15 +1053,11 @@ export default {
       this.register = true
       this.login = false
     })
-    Bus.$on('quickDemoAccess', () => {
-      this.quickDemoAccess()
-    })
   },
   beforeDestroy () {
     Bus.$off('needLogin')
     Bus.$off('openLoginDialog')
     Bus.$off('openRegisterDialog')
-    Bus.$off('quickDemoAccess')
     if (this.loginCodeTimer) {
       clearInterval(this.loginCodeTimer)
     }
@@ -1240,12 +1172,6 @@ body {
   margin: 0 6px 0 0;
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.08);
-}
-
-.demo-access-btn {
-  border-radius: 999px;
-  font-weight: 700;
-  box-shadow: 0 10px 24px rgba(255, 193, 7, 0.28);
 }
 
 .ghost-access-btn {
@@ -1570,27 +1496,6 @@ body {
   font-size: 13px;
   line-height: 1.6;
   color: #60708f;
-}
-
-.demo-helper-card {
-  margin-bottom: 14px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #fff4e6 0%, #fffaf1 100%);
-  border: 1px solid #ffe0b2;
-}
-
-.demo-helper-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: #9a4d00;
-}
-
-.demo-helper-desc {
-  margin-top: 6px;
-  font-size: 12px;
-  line-height: 1.6;
-  color: #9f6b31;
 }
 
 .user-brief-tip {
