@@ -5,6 +5,16 @@
   >
     <q-header reveal elevated class="platform-header text-white">
       <q-toolbar class="platform-toolbar">
+        <q-btn
+          v-if="$q.screen.lt.md"
+          dense
+          flat
+          round
+          color="white"
+          icon="menu"
+          class="mobile-menu-btn"
+          @click="drawerleft = !drawerleft"
+        />
         <div class="brand-block" @click="$router.push({ name: 'web_index' })">
           <img src="statics/icons/logo.png" alt="68卡运联盟" class="brand-logo">
           <div class="brand-copy">
@@ -30,7 +40,7 @@
             dense
             flat
             color="white"
-            :label="displayWarehouseName(warehouse_name) || '默认仓库'"
+            :label="$q.screen.lt.md ? '' : (displayWarehouseName(warehouse_name) || '默认仓库')"
             icon="maps_home_work"
             class="warehouse-switcher"
           >
@@ -57,6 +67,8 @@
               flat
               color="white-8"
               icon="account_circle"
+              :label="$q.screen.lt.md ? '' : login_name"
+              class="account-switcher"
             >
               <div class="row no-wrap q-pa-md">
                 <div class="column" style="width: 140px">
@@ -99,7 +111,17 @@
         <template v-if="authin === '0'">
           <transition appear enter-active-class="animated zoomIn">
             <q-btn
-              :label="$t('index.login')"
+              :label="$q.screen.lt.md ? '演示' : '演示进入'"
+              color="amber-4"
+              text-color="dark"
+              class="demo-access-btn"
+              @click="quickDemoAccess()"
+              style="margin-left: 10px"
+            />
+          </transition>
+          <transition appear enter-active-class="animated zoomIn">
+            <q-btn
+              :label="$q.screen.lt.md ? '登录' : $t('index.login')"
               flat
               color="white"
               class="ghost-access-btn"
@@ -109,7 +131,7 @@
           </transition>
           <transition appear enter-active-class="animated zoomIn">
             <q-btn
-              label="注册并体验"
+              :label="$q.screen.lt.md ? '注册' : '注册并体验'"
               color="primary"
               class="primary-access-btn"
               @click="register = true"
@@ -121,9 +143,9 @@
     </q-header>
     <q-drawer
       v-model="drawerleft"
-      show-if-above
+      :show-if-above="$q.screen.gt.sm"
       :width="188"
-      :breakpoint="500"
+      :breakpoint="1024"
       bordered
       content-class="platform-drawer shadow-24"
     >
@@ -1088,7 +1110,7 @@ body,
 }
 
 body {
-  overflow-x: auto;
+  overflow-x: hidden;
   overflow-y: auto;
 }
 
@@ -1106,6 +1128,12 @@ body {
 .platform-toolbar {
   min-height: 46px;
   padding: 0 10px 0 0;
+  gap: 6px;
+}
+
+.mobile-menu-btn {
+  flex: 0 0 auto;
+  margin-left: 6px;
 }
 
 .brand-block {
@@ -1149,6 +1177,11 @@ body {
   height: 46px;
   overflow-x: auto;
   max-width: 620px;
+  scrollbar-width: none;
+}
+
+.top-nav::-webkit-scrollbar {
+  display: none;
 }
 
 .top-nav-item {
@@ -1471,11 +1504,13 @@ body {
 }
 
 .page-shell-body > * {
-  min-width: min-content;
+  width: 100%;
+  min-width: 0;
 }
 
 .auth-dialog-card {
   min-width: 420px;
+  width: min(92vw, 420px);
   border-radius: 20px;
   overflow: hidden;
 }
@@ -1537,6 +1572,16 @@ body {
 }
 
 @media (max-width: 1024px) {
+  .brand-block {
+    min-width: 0;
+    flex: 1;
+    padding-right: 8px;
+  }
+
+  .top-nav {
+    max-width: 34vw;
+  }
+
   .platform-page-container {
     padding: 6px;
   }
@@ -1548,15 +1593,84 @@ body {
 
 @media (max-width: 768px) {
   .platform-toolbar {
+    min-height: 52px;
     padding-right: 6px;
+    flex-wrap: wrap;
+    align-content: center;
   }
 
   .top-nav {
-    max-width: 42vw;
+    order: 3;
+    flex: 1 0 100%;
+    max-width: 100%;
+    height: 40px;
+    padding: 0 4px 6px;
+  }
+
+  .top-nav-item {
+    height: 36px;
+    padding: 0 12px;
+  }
+
+  .brand-block {
+    gap: 8px;
+    min-width: 0;
+    height: 42px;
+    padding-left: 6px;
+  }
+
+  .brand-logo {
+    width: 34px;
+    height: 34px;
+  }
+
+  .brand-title {
+    font-size: 13px;
+  }
+
+  .brand-subtitle {
+    font-size: 8px;
+    letter-spacing: 0.08em;
+  }
+
+  .warehouse-switcher,
+  .account-switcher,
+  .demo-access-btn,
+  .ghost-access-btn,
+  .primary-access-btn {
+    margin-left: 0 !important;
+  }
+
+  .header-divider {
+    display: none;
   }
 
   .platform-page-container {
     padding: 4px;
+  }
+
+  .auth-code-row {
+    flex-direction: column;
+  }
+
+  .auth-code-btn {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .brand-subtitle {
+    display: none;
+  }
+
+  .top-nav {
+    padding-bottom: 4px;
+  }
+
+  .auth-dialog-card {
+    width: 94vw;
+    min-width: 0;
   }
 }
 </style>
