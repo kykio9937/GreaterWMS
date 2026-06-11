@@ -1,4 +1,4 @@
-const http = require('http')
+﻿const http = require('http')
 const fs = require('fs')
 const path = require('path')
 const url = require('url')
@@ -71,3 +71,4 @@ const server = http.createServer((request, response) => {
 server.listen(port, host, () => {
   console.log(`GreaterWMS SPA server listening at http://${host}:${port}`)
 })
+

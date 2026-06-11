@@ -1,4 +1,4 @@
-import os
+﻿import os
 
 from django.core.asgi import get_asgi_application
 from utils.websocket import websocket_application
@@ -16,4 +16,5 @@ async def application(scope, receive, send):
         await websocket_application(scope, receive, send)
     else:
         raise Exception('Unknown Type' + scope['type'])
+
 

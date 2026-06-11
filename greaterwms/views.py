@@ -1,4 +1,4 @@
-from django.http import StreamingHttpResponse, JsonResponse
+﻿from django.http import StreamingHttpResponse, JsonResponse
 from django.conf import settings
 from wsgiref.util import FileWrapper
 from rest_framework.exceptions import APIException
@@ -54,3 +54,4 @@ def myip(request):
     ip = s.getsockname()[0]
     s.close()
     return JsonResponse({"ip": ip})
+

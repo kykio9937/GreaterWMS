@@ -1,7 +1,6 @@
-import mimetypes, os, requests, django
+﻿import mimetypes, os, requests, django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'greaterwms.settings')
 os.environ["DJANGO_ALLOW_ASYNC_UNSAFE"] = "true"
-django.setup()
 from django.conf import settings
 import pandas as pd
 from pathlib import Path
@@ -65,3 +64,4 @@ if not supplier_en_file:
     df.to_excel(supplier_en_path)
 
 print('Welcome To GreaterWMS')
+

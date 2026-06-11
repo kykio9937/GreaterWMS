@@ -8,7 +8,14 @@ param(
 $ErrorActionPreference = 'Stop'
 
 $projectRoot = 'E:\Desktop_Migrated_20260608\WMS-Demo'
-$backendPython = Join-Path $projectRoot '.conda310\python.exe'
+$backendPythonCandidates = @(
+  (Join-Path $projectRoot '.conda310local\python.exe'),
+  (Join-Path $projectRoot '.conda310local\Scripts\python.exe'),
+  (Join-Path $projectRoot '.conda310\python.exe'),
+  (Join-Path $projectRoot '.conda310\Scripts\python.exe'),
+  'E:\minconda\python.exe'
+)
+$backendPython = $backendPythonCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
 $frontendNode = 'C:\Program Files\nodejs\node.exe'
 $frontendRoot = Join-Path $projectRoot 'templates'
 
@@ -25,8 +32,8 @@ function Test-UrlOk {
   }
 }
 
-if (-not (Test-Path $backendPython)) {
-  throw "未找到后端 Python 环境: $backendPython"
+if (-not $backendPython) {
+  throw "未找到可用的后端 Python 环境，已检查: $($backendPythonCandidates -join ', ')"
 }
 
 if (-not (Test-Path $frontendNode)) {
@@ -38,7 +45,7 @@ if (-not (Test-UrlOk 'http://127.0.0.1:8008')) {
     -ArgumentList 'manage.py', 'runserver', '0.0.0.0:8008' `
     -WorkingDirectory $projectRoot `
     -WindowStyle Hidden
-  Start-Sleep -Seconds 3
+  Start-Sleep -Seconds 8
 }
 
 if (-not (Test-UrlOk 'http://127.0.0.1:8080')) {
@@ -46,7 +53,7 @@ if (-not (Test-UrlOk 'http://127.0.0.1:8080')) {
     -ArgumentList 'serve-spa.js' `
     -WorkingDirectory $frontendRoot `
     -WindowStyle Hidden
-  Start-Sleep -Seconds 2
+  Start-Sleep -Seconds 4
 }
 
 $backendOk = Test-UrlOk 'http://127.0.0.1:8008'
@@ -59,3 +66,4 @@ Write-Host "访问地址: $FrontendUrl"
 if ($backendOk -and $frontendOk -and $OpenBrowser -eq 'yes') {
   Start-Process $FrontendUrl | Out-Null
 }
+

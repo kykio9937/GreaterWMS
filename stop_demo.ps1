@@ -1,4 +1,4 @@
-$projectRoot = 'E:\Desktop_Migrated_20260608\WMS-Demo'
+﻿$projectRoot = 'E:\Desktop_Migrated_20260608\WMS-Demo'
 $backendPython = Join-Path $projectRoot '.conda310\python.exe'
 $frontendNode = 'C:\Program Files\nodejs\node.exe'
 $frontendRoot = Join-Path $projectRoot 'templates'

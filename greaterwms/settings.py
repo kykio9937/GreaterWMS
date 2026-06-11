@@ -1,4 +1,4 @@
-from pathlib import Path
+﻿from pathlib import Path
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -354,3 +354,4 @@ PATCH_THROTTLE = 500
 DELETE_THROTTLE = 500
 
 JWT_TIME = 60 * 60 * 24 * 365 * 20
+
