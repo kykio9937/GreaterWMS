@@ -1,50 +1,15 @@
 <template>
   <q-page class="workbench-page">
-    <div v-if="!isAuthed" class="landing-hero">
-      <div class="landing-copy">
-        <div class="landing-badge">物流演示版</div>
-        <div class="landing-title">68 卡运联盟运输协同演示后台</div>
-        <div class="landing-subtitle">
-          面向国内物流运输场景，已串起运单、在途、签收、客户对账和承运商对账的核心闭环，适合直接演示业务流程。
-        </div>
-        <div class="landing-actions">
-          <q-btn unelevated color="deep-orange" label="一键进入演示" class="landing-primary-btn" @click="quickDemoAccess" />
-          <q-btn flat color="primary" label="手机号登录" class="landing-ghost-btn" @click="openLogin" />
-          <q-btn outline color="primary" label="注册演示账号" class="landing-outline-btn" @click="openRegister" />
-        </div>
-        <div class="landing-hint">
-          建议先使用“一键进入演示”，系统会自动准备演示账号与基础演示数据。
-        </div>
-      </div>
-      <div class="landing-side">
-        <div class="landing-side-card">
-          <div class="landing-side-title">演示闭环</div>
-          <div class="landing-flow">
-            <span v-for="item in demoFlow" :key="item" class="flow-chip">{{ item }}</span>
-          </div>
-        </div>
-        <div class="landing-side-card landing-side-card--light">
-          <div class="landing-side-title">适合展示</div>
-          <div class="landing-metrics">
-            <div v-for="item in landingMetrics" :key="item.label" class="landing-metric">
-              <div class="landing-metric-value">{{ item.value }}</div>
-              <div class="landing-metric-label">{{ item.label }}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <div class="workbench-hero">
       <div>
-        <div class="hero-eyebrow">{{ isAuthed ? '物流运营工作台' : '演示工作台' }}</div>
-        <div class="hero-title">{{ isAuthed ? '欢迎进入 GreaterWMS 中国化物流后台' : '先看演示总览，再进入业务作业区' }}</div>
+        <div class="hero-eyebrow">{{ isAuthed ? '物流运营工作台' : '物流业务入口' }}</div>
+        <div class="hero-title">{{ isAuthed ? '欢迎进入 GreaterWMS 中国化物流后台' : '登录后进入物流业务作业区' }}</div>
         <div class="hero-subtitle">
-          {{ isAuthed ? '围绕订单、仓储、司机、库存和基础资料，集中处理日常作业与业务协同。' : '如果你正在给客户、同事或老板演示，可以先从运输订单中心、在线跟踪、客户对账这三块开始讲。' }}
+          {{ isAuthed ? '围绕订单、仓储、司机、库存和基础资料，集中处理日常作业与业务协同。' : '支持手机号验证码登录、密码登录和注册，登录后可直接进入运单、在途、财务等业务模块。' }}
         </div>
         <div v-if="!isAuthed" class="hero-cta-row">
-          <q-btn unelevated color="primary" label="立即进入演示" @click="quickDemoAccess" />
-          <q-btn flat color="white" label="打开登录窗口" @click="openLogin" />
+          <q-btn unelevated color="primary" label="手机号登录" @click="openLogin" />
+          <q-btn flat color="white" label="注册账号" @click="openRegister" />
         </div>
       </div>
       <div class="hero-side">
@@ -188,12 +153,6 @@ export default {
         { title: '班次提醒', desc: '夜班请在 18:00 前确认待发运订单与承运司机安排。' },
         { title: '系统建议', desc: '可优先从“运输订单中心”和“库存台账”作为主作业入口。' },
         { title: '数据维护', desc: '客户、供应商、商品资料建议统一在主数据模块集中维护。' }
-      ],
-      demoFlow: ['录单', '审核', '派车', '在途', '签收', '客户对账', '承运对账'],
-      landingMetrics: [
-        { label: '核心业务链路', value: '7 步' },
-        { label: '可讲模块', value: '运输 + 财务' },
-        { label: '进入方式', value: '一键演示' }
       ]
     }
   },
@@ -236,9 +195,6 @@ export default {
       const month = String(date.getMonth() + 1).padStart(2, '0')
       const day = String(date.getDate()).padStart(2, '0')
       return `${year}-${month}-${day}`
-    },
-    quickDemoAccess () {
-      Bus.$emit('quickDemoAccess')
     },
     openLogin () {
       Bus.$emit('openLoginDialog')
