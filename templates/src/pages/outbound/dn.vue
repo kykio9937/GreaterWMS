@@ -4,7 +4,7 @@
       <div class="panel-head">
         <div>
           <div class="panel-title">运单列表</div>
-          <div class="panel-subtitle">只保留核心运单字段、修改和删除操作</div>
+          <div class="panel-subtitle">保留核心运单字段，支持快速筛选、编辑和删除</div>
         </div>
         <div class="panel-actions">
           <q-btn color="primary" label="创建运单" @click="$router.push({ name: 'createwaybill' })" />
@@ -13,7 +13,13 @@
       </div>
 
       <div class="filter-grid">
-        <q-input v-model="filter.keyword" dense outlined label="运单号 / 客户 / 货物" />
+        <q-input
+          v-model="filter.keyword"
+          dense
+          outlined
+          label="运单号 / 客户 / 货物"
+          @keyup.enter="applyFilter()"
+        />
         <q-select
           v-model="filter.audit_status"
           dense
@@ -48,7 +54,7 @@
               <th>运单号</th>
               <th>客户名称</th>
               <th>货物名称</th>
-              <th>车线名称</th>
+              <th>线路名称</th>
               <th>所属组织</th>
               <th>派单员</th>
               <th>车牌号</th>
@@ -59,11 +65,16 @@
             </tr>
           </thead>
           <tbody v-if="displayRows.length">
-            <tr v-for="(row, index) in displayRows" :key="row.id">
+            <tr
+              v-for="(row, index) in displayRows"
+              :key="row.id"
+              :class="['table-row-clickable', { 'row-focused': String(row.id) === focusId }]"
+              @click="editData(row)"
+            >
               <td>{{ row.row_index || index + 1 }}</td>
               <td class="action-cell">
-                <button class="text-link" @click="editData(row)">修改运单</button>
-                <button class="text-link danger" @click="deleteData(row)">删除</button>
+                <button class="text-link" @click.stop="editData(row)">修改运单</button>
+                <button class="text-link danger" @click.stop="deleteData(row)">删除</button>
               </td>
               <td>
                 <span :class="['badge-lite', row.audit_status === '已审核' ? 'badge-green' : 'badge-orange']">
@@ -129,6 +140,7 @@ export default {
         audit_status: 'all',
         dn_status: 'all'
       },
+      focusId: '',
       auditOptions: [
         { label: '全部', value: 'all' },
         { label: '待审核', value: '待审核' },
@@ -171,7 +183,8 @@ export default {
         freight_amount: fee.business_income || row.total_cost || 0,
         transport_cost: fee.carrier_cost || 0,
         audit_status: fee.audit_status || '待审核',
-        dn_status_label: STATUS_LABEL_MAP[row.dn_status] || '待受理'
+        dn_status_label: STATUS_LABEL_MAP[row.dn_status] || '待受理',
+        create_time: row.create_time ? String(row.create_time).replace('T', ' ').slice(0, 16) : '--'
       }
     },
     async getList () {
@@ -181,6 +194,7 @@ export default {
         this.total = Number(res.count || 0)
         this.max = Math.max(1, Math.ceil(this.total / 30))
         this.rawRows = (res.results || []).map((item, index) => this.mapRow(item, index))
+        this.applyRouteFilters()
       } catch (err) {
         this.$q.notify({
           type: 'negative',
@@ -193,13 +207,26 @@ export default {
         this.loading = false
       }
     },
-    applyFilter () {},
+    applyFilter () {
+      this.focusId = ''
+      this.current = 1
+    },
     resetFilter () {
       this.filter = {
         keyword: '',
         audit_status: 'all',
         dn_status: 'all'
       }
+      this.focusId = ''
+      this.current = 1
+      if (this.$route.query.keyword || this.$route.query.focus) {
+        this.$router.replace({ query: {} })
+      }
+    },
+    applyRouteFilters () {
+      const { keyword, focus } = this.$route.query
+      this.filter.keyword = keyword ? String(keyword) : ''
+      this.focusId = focus ? String(focus) : ''
     },
     editData (row) {
       this.$router.push({
@@ -221,7 +248,7 @@ export default {
           await deleteauth(`dn/list/${row.id}/`)
           this.$q.notify({
             type: 'positive',
-            message: '运单删除成功'
+            message: `运单 ${row.dn_code} 已删除`
           })
           this.getList()
         } catch (err) {
@@ -237,6 +264,7 @@ export default {
     }
   },
   created () {
+    this.applyRouteFilters()
     this.getList()
   },
   mounted () {
@@ -244,6 +272,14 @@ export default {
   },
   beforeDestroy () {
     Bus.$off('waybillChanged', this.handleWaybillChanged)
+  },
+  watch: {
+    '$route.query': {
+      deep: true,
+      handler () {
+        this.applyRouteFilters()
+      }
+    }
   }
 }
 </script>
@@ -326,6 +362,18 @@ export default {
   background: #f8fbff;
   color: #27486f;
   z-index: 1;
+}
+
+.row-focused td {
+  background: #f7f2ff;
+}
+
+.table-row-clickable {
+  cursor: pointer;
+}
+
+.table-row-clickable:hover td {
+  background: #f5f9ff;
 }
 
 .action-cell {

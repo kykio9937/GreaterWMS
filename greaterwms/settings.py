@@ -311,6 +311,13 @@ LOGGING = {
     },
 }
 
+# Local Windows demo mode is more stable with console logging only.
+if os.name == 'nt':
+    LOGGING["handlers"].pop("file", None)
+    LOGGING["handlers"].pop("error", None)
+    LOGGING["loggers"]["django"]["handlers"] = ["console"]
+    LOGGING["loggers"]["scripts"]["handlers"] = ["console"]
+
 CORS_ALLOW_CREDENTIALS = True
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_ORIGIN_WHITELIST = ()

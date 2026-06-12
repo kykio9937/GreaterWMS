@@ -1,100 +1,86 @@
-﻿<template>
-    <div>
-      <transition appear enter-active-class="animated fadeIn">
-      <q-table
-        class="my-sticky-header-table shadow-24"
-        :data="table_list"
-        row-key="id"
-        :separator="separator"
-        :loading="loading"
-        :filter="filter"
-        :columns="columns"
-        hide-bottom
-        :pagination.sync="pagination"
-        no-data-label="$t('no_data')"
-        no-results-label="$t('no_results')"
-        :table-style="{ height: height }"
-        flat
-        bordered
-      >
-         <template v-slot:top>
-           <q-btn-group push>
-             <q-btn :label="$t('refresh')" icon="refresh" @click="reFresh()">
-               <q-tooltip content-class="bg-amber text-black shadow-4" :offset="[10, 10]" content-style="font-size: 12px">
-                 {{ $t('refreshtip') }}
-               </q-tooltip>
-             </q-btn>
-           </q-btn-group>
-           <q-space />
-           <q-input outlined rounded dense debounce="300" color="primary" v-model="filter" :placeholder="$t('search')" @input="getSearchList()" @keyup.enter="getSearchList()">
-             <template v-slot:append>
-               <q-icon name="search" @click="getSearchList()"/>
-             </template>
-           </q-input>
-         </template>
-         <template v-slot:body="props">
-           <q-tr :props="props">
-               <q-td key="dn_code" :props="props">
-                 {{ props.row.dn_code }}
-               </q-td>
-               <q-td key="goods_code" :props="props">
-                 {{ props.row.goods_code }}
-               </q-td>
-               <q-td key="goods_desc" :props="props">
-                 {{ props.row.goods_desc }}
-               </q-td>
-               <q-td key="goods_qty" :props="props">
-                 {{ props.row.goods_qty }}
-               </q-td>
-               <q-td key="goods_weight" :props="props">
-                 {{ props.row.goods_weight }}
-               </q-td>
-             <q-td key="goods_volume" :props="props">
-               {{ props.row.goods_volume }}
-             </q-td>
-             <q-td key="customer" :props="props">
-               {{ props.row.customer }}
-             </q-td>
-             <q-td key="creater" :props="props">
-               {{ props.row.creater }}
-             </q-td>
-             <q-td key="create_time" :props="props">
-               {{ props.row.create_time }}
-             </q-td>
-             <q-td key="update_time" :props="props">
-               {{ props.row.update_time }}
-             </q-td>
-           </q-tr>
-         </template>
-      </q-table>
-        </transition>
-      <template>
-        <div v-show="max !== 0" class="q-pa-lg flex flex-center">
-           <div>{{ total }} </div>
+<template>
+  <q-page class="change-log-page">
+    <div class="page-card">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">运单修改记录</div>
+          <div class="panel-subtitle">展示待修改或已变更的运单记录，便于追踪运单调整情况</div>
+        </div>
+        <q-btn flat color="grey-7" label="刷新" @click="getList()" />
+      </div>
+
+      <div class="filter-bar">
+        <q-input
+          v-model="filter"
+          dense
+          outlined
+          label="搜索运单号"
+          @keyup.enter="getSearchList()"
+        >
+          <template v-slot:append>
+            <q-icon name="search" class="cursor-pointer" @click="getSearchList()" />
+          </template>
+        </q-input>
+      </div>
+
+      <div class="table-scroll">
+        <table class="change-table">
+          <thead>
+            <tr>
+              <th>运单号</th>
+              <th>货物编码</th>
+              <th>货物名称</th>
+              <th>数量</th>
+              <th>重量</th>
+              <th>体积</th>
+              <th>客户</th>
+              <th>创建人</th>
+              <th>创建时间</th>
+              <th>更新时间</th>
+            </tr>
+          </thead>
+          <tbody v-if="tableList.length">
+            <tr v-for="row in tableList" :key="row.id">
+              <td>{{ row.dn_code }}</td>
+              <td>{{ row.goods_code }}</td>
+              <td>{{ row.goods_desc }}</td>
+              <td>{{ row.goods_qty }}</td>
+              <td>{{ row.goods_weight }}</td>
+              <td>{{ row.goods_volume }}</td>
+              <td>{{ row.customer }}</td>
+              <td>{{ row.creater }}</td>
+              <td>{{ formatDateTime(row.create_time) }}</td>
+              <td>{{ formatDateTime(row.update_time) }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <div v-if="!tableList.length" class="empty-block">暂无运单修改记录</div>
+      </div>
+
+      <div class="footer-bar">
+        <div>共 {{ total }} 条</div>
+        <div class="page-tools">
           <q-pagination
+            v-if="max > 1"
             v-model="current"
-            color="black"
+            color="primary"
             :max="max"
             :max-pages="6"
             boundary-links
-            @click="getList()"
+            @input="getList"
           />
-          <div>
-            <input
-              v-model="paginationIpt"
-              @blur="changePageEnter"
-              @keyup.enter="changePageEnter"
-              style="width: 60px; text-align: center"
-            />
-          </div>
+          <input
+            v-if="max > 1"
+            v-model="paginationInput"
+            class="page-input"
+            @blur="changePageEnter"
+            @keyup.enter="changePageEnter"
+          />
         </div>
-        <div v-show="max === 0" class="q-pa-lg flex flex-center">
-          <q-btn flat push color="dark" :label="$t('no_data')"></q-btn>
-        </div>
-    </template>
+      </div>
     </div>
+  </q-page>
 </template>
-    <router-view />
 
 <script>
 import { getauth } from 'boot/axios_request'
@@ -103,186 +89,182 @@ export default {
   name: 'Pagednneworder',
   data () {
     return {
-      openid: '',
-      login_name: '',
-      authin: '0',
       pathname: 'dn/detail/?dn_status=2',
-      pathname_previous: '',
-      pathname_next: '',
-      separator: 'cell',
       loading: false,
-      height: '',
-      table_list: [],
-      bin_size_list: [],
-      bin_property_list: [],
-      warehouse_list: [],
-      columns: [
-        { name: 'dn_code', required: true, label: this.$t('outbound.view_dn.dn_code'), align: 'left', field: 'dn_code' },
-        { name: 'goods_code', label: this.$t('goods.view_goodslist.goods_code'), field: 'goods_code', align: 'center' },
-        { name: 'goods_desc', label: this.$t('goods.view_goodslist.goods_desc'), field: 'goods_desc', align: 'center' },
-        { name: 'goods_qty', label: this.$t('outbound.view_dn.goods_qty'), field: 'goods_qty', align: 'center' },
-        { name: 'goods_weight', label: this.$t('outbound.view_dn.total_weight'), field: 'goods_weight', align: 'center' },
-        { name: 'goods_volume', label: this.$t('outbound.view_dn.total_volume'), field: 'empty_label', align: 'center' },
-        { name: 'customer', label: this.$t('baseinfo.view_customer.customer_name'), field: 'customer', align: 'center' },
-        { name: 'creater', label: this.$t('creater'), field: 'creater', align: 'center' },
-        { name: 'create_time', label: this.$t('createtime'), field: 'create_time', align: 'center' },
-        { name: 'update_time', label: this.$t('updatetime'), field: 'update_time', align: 'center' }
-      ],
+      tableList: [],
       filter: '',
-      pagination: {
-        page: 1,
-        rowsPerPage: '30'
-      },
       current: 1,
       max: 0,
       total: 0,
-      paginationIpt: 1
+      paginationInput: 1
     }
   },
   methods: {
-    getList () {
-      var _this = this
-      if (_this.$q.localStorage.has('auth')) {
-        getauth(_this.pathname + '&page=' + '' + _this.current, {
-        }).then(res => {
-          _this.table_list = res.results
-          _this.total = res.count
-          if (res.count === 0) {
-            _this.max = 0
-          } else {
-            if (Math.ceil(res.count / 30) === 1) {
-              _this.max = 0
-            } else {
-              _this.max = Math.ceil(res.count / 30)
-            }
-          }
-          _this.pathname_previous = res.previous
-          _this.pathname_next = res.next
-        }).catch(err => {
-          _this.$q.notify({
-            message: err.detail,
-            icon: 'close',
-            color: 'negative'
-          })
-        })
+    formatDateTime (value) {
+      if (!value) {
+        return '--'
+      }
+      return String(value).replace('T', ' ').slice(0, 16)
+    },
+    buildUrl () {
+      const searchPart = this.filter ? `&dn_code__icontains=${encodeURIComponent(this.filter)}` : ''
+      return `${this.pathname}${searchPart}&page=${this.current}`
+    },
+    updatePaging (count) {
+      this.total = Number(count || 0)
+      this.max = this.total <= 30 ? 0 : Math.ceil(this.total / 30)
+      if (this.max === 0) {
+        this.paginationInput = 1
       }
     },
-    changePageEnter(e) {
-      if (Number(this.paginationIpt) < 1) {
-        this.current = 1;
-        this.paginationIpt = 1;
-      } else if (Number(this.paginationIpt) > this.max) {
-        this.current = this.max;
-        this.paginationIpt = this.max;
-      } else {
-        this.current = Number(this.paginationIpt);
+    async getList () {
+      if (!this.$q.localStorage.has('auth')) {
+        return
       }
-      this.getList();
+      this.loading = true
+      try {
+        const res = await getauth(this.buildUrl(), {})
+        this.tableList = res.results || []
+        this.updatePaging(res.count)
+      } catch (err) {
+        this.$q.notify({
+          message: err.detail || '运单修改记录加载失败',
+          icon: 'close',
+          color: 'negative'
+        })
+      } finally {
+        this.loading = false
+      }
     },
     getSearchList () {
-      var _this = this
-      if (_this.$q.localStorage.has('auth')) {
-        _this.current = 1
-        _this.paginationIpt = 1
-        getauth(_this.pathname + '&dn_code__icontains=' + _this.filter + '&page=' + '' + _this.current, {
-        }).then(res => {
-          _this.table_list = res.results
-          _this.total = res.count
-          if (res.count === 0) {
-            _this.max = 0
-          } else {
-            if (Math.ceil(res.count / 30) === 1) {
-              _this.max = 0
-            } else {
-              _this.max = Math.ceil(res.count / 30)
-            }
-          }
-          _this.pathname_previous = res.previous
-          _this.pathname_next = res.next
-        }).catch(err => {
-          _this.$q.notify({
-            message: err.detail,
-            icon: 'close',
-            color: 'negative'
-          })
-        })
-      } else {
-      }
+      this.current = 1
+      this.paginationInput = 1
+      this.getList()
     },
-    getListPrevious () {
-      var _this = this
-      if (_this.$q.localStorage.has('auth')) {
-        getauth(_this.pathname_previous, {
-        }).then(res => {
-          _this.table_list = res.results
-          _this.pathname_previous = res.previous
-          _this.pathname_next = res.next
-        }).catch(err => {
-          _this.$q.notify({
-            message: err.detail,
-            icon: 'close',
-            color: 'negative'
-          })
-        })
+    changePageEnter () {
+      if (Number(this.paginationInput) < 1) {
+        this.current = 1
+        this.paginationInput = 1
+      } else if (this.max > 0 && Number(this.paginationInput) > this.max) {
+        this.current = this.max
+        this.paginationInput = this.max
       } else {
+        this.current = Number(this.paginationInput) || 1
       }
-    },
-    getListNext () {
-      var _this = this
-      if (_this.$q.localStorage.has('auth')) {
-        getauth(_this.pathname_next, {
-        }).then(res => {
-          _this.table_list = res.results
-          _this.pathname_previous = res.previous
-          _this.pathname_next = res.next
-        }).catch(err => {
-          _this.$q.notify({
-            message: err.detail,
-            icon: 'close',
-            color: 'negative'
-          })
-        })
-      } else {
-      }
-    },
-    reFresh () {
-      var _this = this
-      _this.getList()
+      this.getList()
     }
   },
   created () {
-    var _this = this
-    if (_this.$q.localStorage.has('openid')) {
-      _this.openid = _this.$q.localStorage.getItem('openid')
-    } else {
-      _this.openid = ''
-      _this.$q.localStorage.set('openid', '')
-    }
-    if (_this.$q.localStorage.has('login_name')) {
-      _this.login_name = _this.$q.localStorage.getItem('login_name')
-    } else {
-      _this.login_name = ''
-      _this.$q.localStorage.set('login_name', '')
-    }
-    if (_this.$q.localStorage.has('auth')) {
-      _this.authin = '1'
-      _this.getList()
-    } else {
-      _this.authin = '0'
-    }
-  },
-  mounted () {
-    var _this = this
-    if (_this.$q.platform.is.electron) {
-      _this.height = String(_this.$q.screen.height - 290) + 'px'
-    } else {
-      _this.height = _this.$q.screen.height - 290 + '' + 'px'
-    }
-  },
-  updated () {
-  },
-  destroyed () {
+    this.getList()
   }
 }
 </script>
 
+<style scoped>
+.change-log-page {
+  padding: 12px;
+  background: #f5f7fb;
+}
+
+.page-card {
+  background: #fff;
+  border: 1px solid #d8e1ef;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 8px 24px rgba(16, 37, 63, 0.06);
+}
+
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.panel-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1b365d;
+}
+
+.panel-subtitle {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #70839b;
+}
+
+.filter-bar {
+  margin: 18px 0 14px;
+  max-width: 320px;
+}
+
+.table-scroll {
+  overflow: auto;
+  border: 1px solid #e5edf6;
+  border-radius: 10px;
+}
+
+.change-table {
+  width: 100%;
+  min-width: 1120px;
+  border-collapse: collapse;
+}
+
+.change-table th,
+.change-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #edf2f7;
+  white-space: nowrap;
+  text-align: left;
+  font-size: 13px;
+}
+
+.change-table th {
+  position: sticky;
+  top: 0;
+  background: #f8fbff;
+  color: #27486f;
+  z-index: 1;
+}
+
+.empty-block {
+  padding: 40px 12px;
+  text-align: center;
+  color: #7c8ea6;
+}
+
+.footer-bar {
+  margin-top: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.page-tools {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.page-input {
+  width: 60px;
+  height: 32px;
+  padding: 0 8px;
+  border: 1px solid #d0d9ea;
+  border-radius: 8px;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .panel-head,
+  .footer-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-bar {
+    max-width: none;
+  }
+}
+</style>

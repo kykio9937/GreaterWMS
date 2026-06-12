@@ -368,6 +368,11 @@ export default {
     }
   },
   methods: {
+    syncRouteFilters () {
+      const { keyword } = this.$route.query
+      this.filters.keyword = keyword ? String(keyword) : ''
+      this.current = 1
+    },
     applyFilters () {
       this.current = 1
     },
@@ -385,7 +390,16 @@ export default {
       this.selectedIds = []
       this.filters.keyword = ''
       this.filters.status = 'all'
+    },
+    '$route.query': {
+      deep: true,
+      handler () {
+        this.syncRouteFilters()
+      }
     }
+  },
+  created () {
+    this.syncRouteFilters()
   }
 }
 </script>

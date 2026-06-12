@@ -4,28 +4,34 @@
       <div class="panel-head">
         <div>
           <div class="panel-title">运单审核</div>
-          <div class="panel-subtitle">审核数据直接从运单列表读取，并回写审核状态</div>
+          <div class="panel-subtitle">从运单数据中直接处理审核，适合首页审核中心联动进入</div>
         </div>
         <q-btn flat color="grey-7" label="刷新" @click="getList()" />
       </div>
 
       <div class="summary-strip">
-        <div class="summary-box">
+        <button type="button" class="summary-box" @click="setQuickStatus('待审核')">
           <div class="summary-label">待审核</div>
           <div class="summary-value">{{ pendingCount }}</div>
-        </div>
-        <div class="summary-box">
+        </button>
+        <button type="button" class="summary-box" @click="setQuickStatus('已审核')">
           <div class="summary-label">已审核</div>
           <div class="summary-value">{{ approvedCount }}</div>
-        </div>
-        <div class="summary-box">
+        </button>
+        <button type="button" class="summary-box" @click="setQuickStatus('all')">
           <div class="summary-label">当前页合计金额</div>
           <div class="summary-value">¥{{ visibleIncome }}</div>
-        </div>
+        </button>
       </div>
 
       <div class="filter-grid">
-        <q-input v-model="filter.keyword" dense outlined label="运单号 / 客户 / 货物" />
+        <q-input
+          v-model="filter.keyword"
+          dense
+          outlined
+          label="运单号 / 客户 / 货物"
+          @keyup.enter="applyFilter()"
+        />
         <q-select
           v-model="filter.audit_status"
           dense
@@ -35,7 +41,7 @@
           label="审核状态"
           :options="auditOptions"
         />
-        <q-btn unelevated color="primary" label="查询" />
+        <q-btn unelevated color="primary" label="查询" @click="applyFilter()" />
         <q-btn flat color="grey-7" label="重置" @click="resetFilter()" />
       </div>
 
@@ -57,7 +63,11 @@
             </tr>
           </thead>
           <tbody v-if="displayRows.length">
-            <tr v-for="(row, index) in displayRows" :key="row.id">
+            <tr
+              v-for="(row, index) in displayRows"
+              :key="row.id"
+              :class="{ 'row-focused': String(row.id) === focusId }"
+            >
               <td>{{ row.row_index || index + 1 }}</td>
               <td>{{ row.dn_code }}</td>
               <td>{{ row.customer }}</td>
@@ -66,7 +76,7 @@
               <td>{{ money(row.freight_amount) }}</td>
               <td>{{ money(row.transport_cost) }}</td>
               <td>
-                <span :class="['badge-lite', row.audit_status === '已审核' ? 'badge-green' : 'badge-orange']">
+                <span :class="['badge-lite', row.audit_status === '已审核' ? 'badge-green' : row.audit_status === '退回修改' ? 'badge-red' : 'badge-orange']">
                   {{ row.audit_status }}
                 </span>
               </td>
@@ -127,11 +137,11 @@ export default {
       rawRows: [],
       filter: {
         keyword: '',
-        audit_status: 'all'
+        audit_status: '待审核'
       },
       auditOptions: [
-        { label: '全部', value: 'all' },
         { label: '待审核', value: '待审核' },
+        { label: '全部', value: 'all' },
         { label: '已审核', value: '已审核' },
         { label: '退回修改', value: '退回修改' }
       ],
@@ -140,7 +150,8 @@ export default {
         mode: 'approved',
         row: null,
         remark: ''
-      }
+      },
+      focusId: ''
     }
   },
   computed: {
@@ -153,10 +164,10 @@ export default {
       })
     },
     pendingCount () {
-      return this.rawRows.filter(item => item.audit_status === '待审核').length
+      return this.displayRows.filter(item => item.audit_status === '待审核').length
     },
     approvedCount () {
-      return this.rawRows.filter(item => item.audit_status === '已审核').length
+      return this.displayRows.filter(item => item.audit_status === '已审核').length
     },
     visibleIncome () {
       return this.displayRows.reduce((sum, item) => sum + Number(item.freight_amount || 0), 0).toFixed(2)
@@ -165,6 +176,11 @@ export default {
   methods: {
     money (value) {
       return Number(value || 0).toFixed(2)
+    },
+    setQuickStatus (status) {
+      this.filter.audit_status = status
+      this.current = 1
+      this.focusId = ''
     },
     mapRow (row, index) {
       const fee = row.transportation_fee || {}
@@ -176,7 +192,8 @@ export default {
         freight_amount: fee.business_income || row.total_cost || 0,
         transport_cost: fee.carrier_cost || 0,
         audit_status: fee.audit_status || '待审核',
-        audit_remark: fee.audit_remark || ''
+        audit_remark: fee.audit_remark || '',
+        create_time: row.create_time ? String(row.create_time).replace('T', ' ').slice(0, 16) : '--'
       }
     },
     async getList () {
@@ -185,6 +202,7 @@ export default {
         this.total = Number(res.count || 0)
         this.max = Math.max(1, Math.ceil(this.total / 30))
         this.rawRows = (res.results || []).map((item, index) => this.mapRow(item, index))
+        this.applyRouteFilters()
       } catch (err) {
         this.$q.notify({
           type: 'negative',
@@ -196,8 +214,22 @@ export default {
     resetFilter () {
       this.filter = {
         keyword: '',
-        audit_status: 'all'
+        audit_status: '待审核'
       }
+      this.focusId = ''
+      this.current = 1
+      if (this.$route.query.keyword || this.$route.query.focus) {
+        this.$router.replace({ query: {} })
+      }
+    },
+    applyFilter () {
+      this.focusId = ''
+      this.current = 1
+    },
+    applyRouteFilters () {
+      const { keyword, focus } = this.$route.query
+      this.filter.keyword = keyword ? String(keyword) : ''
+      this.focusId = focus ? String(focus) : ''
     },
     openAuditDialog (row, mode) {
       this.auditDialog = {
@@ -221,9 +253,12 @@ export default {
         })
         this.$q.notify({
           type: 'positive',
-          message: '审核状态已更新'
+          message: `运单 ${row.dn_code} 审核已完成`
         })
         this.auditDialog.visible = false
+        this.auditDialog.row = null
+        this.auditDialog.remark = ''
+        this.focusId = ''
         Bus.$emit('waybillChanged', { type: 'audit', id: row.id })
         this.getList()
       } catch (err) {
@@ -238,6 +273,7 @@ export default {
     }
   },
   created () {
+    this.applyRouteFilters()
     this.getList()
   },
   mounted () {
@@ -245,6 +281,14 @@ export default {
   },
   beforeDestroy () {
     Bus.$off('waybillChanged', this.handleWaybillChanged)
+  },
+  watch: {
+    '$route.query': {
+      deep: true,
+      handler () {
+        this.applyRouteFilters()
+      }
+    }
   }
 }
 </script>
@@ -294,6 +338,8 @@ export default {
   border: 1px solid #e5edf6;
   border-radius: 10px;
   background: #f8fbff;
+  text-align: left;
+  cursor: pointer;
 }
 
 .summary-label {
@@ -344,6 +390,10 @@ export default {
   z-index: 1;
 }
 
+.row-focused td {
+  background: #f7f2ff;
+}
+
 .action-cell {
   display: flex;
   gap: 10px;
@@ -377,6 +427,11 @@ export default {
 .badge-orange {
   background: #fff3df;
   color: #d28b21;
+}
+
+.badge-red {
+  background: #feecec;
+  color: #c44e4e;
 }
 
 .empty-block {

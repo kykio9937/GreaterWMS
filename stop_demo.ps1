@@ -1,19 +1,37 @@
-﻿$projectRoot = 'E:\Desktop_Migrated_20260608\WMS-Demo'
-$backendPython = Join-Path $projectRoot '.conda310\python.exe'
-$frontendNode = 'C:\Program Files\nodejs\node.exe'
-$frontendRoot = Join-Path $projectRoot 'templates'
+$projectRoot = 'E:\Desktop_Migrated_20260608\WMS-Demo'
+$runtimeDir = Join-Path $projectRoot '.demo-runtime'
+$backendPidFile = Join-Path $runtimeDir 'backend.pid'
+$frontendPidFile = Join-Path $runtimeDir 'frontend.pid'
 
-$targets = Get-CimInstance Win32_Process | Where-Object {
-  ($_.ExecutablePath -eq $backendPython -and $_.CommandLine -like '*manage.py*runserver*8008*') -or
-  ($_.ExecutablePath -eq $frontendNode -and $_.CommandLine -like "*$frontendRoot*serve-spa.js*")
+function Stop-ProcessByPidFile {
+  param(
+    [string]$PidFile,
+    [string]$Label
+  )
+
+  if (-not (Test-Path $PidFile)) {
+    return $false
+  }
+
+  $rawPid = (Get-Content -Path $PidFile -ErrorAction SilentlyContinue | Select-Object -First 1).Trim()
+  if (-not $rawPid) {
+    Remove-Item -LiteralPath $PidFile -Force -ErrorAction SilentlyContinue
+    return $false
+  }
+
+  $process = Get-Process -Id ([int]$rawPid) -ErrorAction SilentlyContinue
+  if ($process) {
+    Stop-Process -Id $process.Id -Force
+    Write-Host ("Stopped {0} PID {1}" -f $Label, $process.Id)
+  }
+
+  Remove-Item -LiteralPath $PidFile -Force -ErrorAction SilentlyContinue
+  return [bool]$process
 }
 
-if (-not $targets) {
+$stoppedBackend = Stop-ProcessByPidFile -PidFile $backendPidFile -Label 'backend'
+$stoppedFrontend = Stop-ProcessByPidFile -PidFile $frontendPidFile -Label 'frontend'
+
+if (-not $stoppedBackend -and -not $stoppedFrontend) {
   Write-Host 'No running demo processes found.'
-  exit 0
-}
-
-$targets | ForEach-Object {
-  Stop-Process -Id $_.ProcessId -Force
-  Write-Host ("Stopped process PID {0}" -f $_.ProcessId)
 }
