@@ -14,7 +14,7 @@
         <div class="brand-block" @click="$router.push({ name: 'web_index' })">
           <img src="statics/icons/logo.png" alt="WMS Demo" class="brand-logo">
           <div>
-            <div class="brand-title">68 卡运联盟</div>
+            <div class="brand-title">物流管理系统</div>
             <div class="brand-subtitle">物流运输协同平台</div>
           </div>
         </div>
