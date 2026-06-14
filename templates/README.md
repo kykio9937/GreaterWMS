@@ -1,26 +1,65 @@
-﻿# wms templates (templates)
+﻿# GreaterWMS Frontend
 
-wms templates
+This frontend is intentionally kept on the existing Vue 2 / Quasar 1 stack.
+For stable local development and reproducible deployment, use `npm` with `Node 16.13.1`.
 
-## Install the dependencies
+## Runtime Requirements
+
 ```bash
-yarn
+node -v   # must be 16.x
+npm -v    # recommended: 8.x
 ```
 
-### Start the app in development mode (hot-code reloading, error reporting, etc.)
+If you use `nvm`:
+
 ```bash
-quasar dev
+nvm use
 ```
 
-### Lint the files
+## Install Dependencies
+
 ```bash
-yarn run lint
+npm ci
 ```
 
-### Build the app for production
+If `node_modules` does not exist yet and you are doing a first install, `npm install` is also acceptable:
+
 ```bash
-quasar build
+npm install
 ```
 
-### Customize the configuration
-See [Configuring quasar.conf.js](https://quasar.dev/quasar-cli/quasar-conf-js).
+## Start Development Server
+
+```bash
+npm run dev
+```
+
+Default URL:
+
+```text
+http://127.0.0.1:8080/#/
+```
+
+## Build Production Assets
+
+```bash
+npm run build
+```
+
+## Serve Built SPA
+
+```bash
+npm run start
+```
+
+## Lint
+
+```bash
+npm run lint
+```
+
+## Notes
+
+- Use `npm` only for this frontend. Do not mix `npm` and `yarn`.
+- The build scripts enforce `Node 16.x` to avoid the OpenSSL / Webpack issues seen on newer Node releases.
+- API base URL is read from `public/statics/baseurl.txt`.
