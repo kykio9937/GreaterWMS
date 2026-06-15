@@ -22,11 +22,16 @@ pip install -r "$PROJECT_ROOT/requirements.txt"
 
 echo "==> Update frontend dependencies"
 cd "$FRONTEND_ROOT"
-npm install
+DEFAULT_NODE16_BIN="$HOME/miniconda3/envs/greaterwms_env/bin"
+if [ -x "$DEFAULT_NODE16_BIN/node" ] && [ "${USE_BUNDLED_NODE16:-1}" = "1" ]; then
+  export PATH="$DEFAULT_NODE16_BIN:$PATH"
+fi
+
+npm run check:node
+npm ci
 
 echo "==> Build frontend"
-export NODE_OPTIONS=--openssl-legacy-provider
-npx quasar build
+npm run build
 
 echo "==> Restart services"
 cd "$PROJECT_ROOT"

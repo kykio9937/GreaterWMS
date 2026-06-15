@@ -101,7 +101,7 @@ def build_next_dn_code(openid):
 class DnCreateWaybillViewSet(viewsets.ViewSet):
     def create(self, request):
         if not request.user:
-            raise APIException({"detail": "Please Add Token To Your Request Headers"})
+            raise APIException({"detail": "请先登录后再操作"})
 
         data = request.data or {}
         openid = request.auth.openid

@@ -5,7 +5,15 @@
   "productName": "GreaterWMS--Open Source Warehouse Management System",
   "author": "Elvis.Shi(elvis.shi@56yhz.com)",
   "private": true,
+  "packageManager": "npm@8.1.2",
   "scripts": {
+    "preinstall": "node ./scripts/check-node.js",
+    "check:node": "node ./scripts/check-node.js",
+    "dev": "npm run check:node && quasar dev -H 0.0.0.0 -p 8080",
+    "build": "npm run check:node && quasar build",
+    "serve:spa": "node ./serve-spa.js",
+    "start": "npm run serve:spa",
+    "ci:install": "npm ci",
     "lint": "eslint --ext .js,.vue ./",
     "test": "echo \"No test specified\" && exit 0"
   },
@@ -63,9 +71,7 @@
     "last 5 Opera versions"
   ],
   "engines": {
-    "node": ">= 10.18.1",
-    "npm": ">= 6.13.4",
-    "yarn": ">= 1.21.1"
+    "node": "16.x",
+    "npm": ">=8 <11"
   }
 }
-
