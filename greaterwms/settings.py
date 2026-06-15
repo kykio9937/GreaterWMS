@@ -1,4 +1,4 @@
-﻿from pathlib import Path
+from pathlib import Path
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -99,16 +99,49 @@ CSRF_COOKIE_SAMESITE = None
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
-# update
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-        'OPTIONS': {
-            'timeout': 20,
+
+def _load_wms_db_env():
+    env_path = BASE_DIR / '.wms-db.env'
+    if env_path.exists():
+        for raw_line in env_path.read_text(encoding='utf-8').splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith('#') or '=' not in line:
+                continue
+            key, value = line.split('=', 1)
+            os.environ.setdefault(key.strip(), value.strip())
+
+_load_wms_db_env()
+
+if os.environ.get('WMS_DB_ENGINE') == 'mysql':
+    try:
+        import pymysql
+        pymysql.install_as_MySQLdb()
+    except ImportError:
+        pass
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': os.environ.get('WMS_DB_NAME'),
+            'USER': os.environ.get('WMS_DB_USER'),
+            'PASSWORD': os.environ.get('WMS_DB_PASSWORD'),
+            'HOST': os.environ.get('WMS_DB_HOST', '127.0.0.1'),
+            'PORT': os.environ.get('WMS_DB_PORT', '3306'),
+            'OPTIONS': {
+                'charset': 'utf8mb4',
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            },
         }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+            'OPTIONS': {
+                'timeout': 20,
+            }
+        }
+    }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
